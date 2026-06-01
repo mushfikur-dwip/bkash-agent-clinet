@@ -23,6 +23,8 @@ import { useLocation } from "wouter";
 
 const verifySchema = z.object({
   transaction_id: z.string().min(1, { message: "Transaction ID is required" }),
+  amount: z.coerce.number().positive({ message: "Amount must be greater than 0" }),
+  customer_mobile: z.string().optional(),
 });
 
 type VerifyState =
@@ -63,6 +65,8 @@ export default function Dashboard() {
     resolver: zodResolver(verifySchema),
     defaultValues: {
       transaction_id: "",
+      amount: undefined,
+      customer_mobile: "",
     },
   });
 
@@ -75,8 +79,8 @@ export default function Dashboard() {
       {
         data: {
           txid: values.transaction_id.trim(),
-          amount: 1,
-          customer_mobile: null,
+          amount: values.amount,
+          customer_mobile: values.customer_mobile || null,
         },
       },
       {
@@ -98,7 +102,7 @@ export default function Dashboard() {
   }
 
   function handleClear() {
-    form.reset({ transaction_id: "" });
+    form.reset({ transaction_id: "", amount: undefined as any, customer_mobile: "" });
     setVerifyState({ type: "idle" });
   }
 
@@ -114,7 +118,7 @@ export default function Dashboard() {
   }
 
   const pendingLabel =
-    verifyState.type === "calling_piprapay" ? "CHECKING DATABASE..." :
+    verifyState.type === "calling_piprapay" ? "INITIATING & VERIFYING..." :
     verifyState.type === "saving" ? "SAVING..." : "VERIFY NOW";
 
   return (
@@ -150,7 +154,7 @@ export default function Dashboard() {
             <Card className="border-border shadow-md">
               <CardHeader className="pb-4">
                 <CardTitle className="text-lg">Verify Transaction</CardTitle>
-                <CardDescription>Enter transaction ID to check the saved webhook payment.</CardDescription>
+                <CardDescription>Enter trxID and amount to initiate a charge, verify it, and save approved payments.</CardDescription>
               </CardHeader>
               <CardContent>
                 <Form {...form}>
@@ -164,6 +168,44 @@ export default function Dashboard() {
                           <FormControl>
                             <Input
                               placeholder="e.g. DF7T30GRH"
+                              {...field}
+                              className="font-mono h-11"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="amount"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs uppercase font-bold text-muted-foreground">Amount (BDT)</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="0.00"
+                              {...field}
+                              className="font-mono h-11"
+                              onChange={(e) => field.onChange(e.target.value === "" ? "" : Number(e.target.value))}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="customer_mobile"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs uppercase font-bold text-muted-foreground">Customer Mobile (Optional)</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="01XXXXXXXXX"
                               {...field}
                               className="font-mono h-11"
                             />
