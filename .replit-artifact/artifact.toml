@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Transaction Verify"
+version = "1.0.0"
+id = "artifacts/txverify"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20504
+
+[services.development]
+run = "pnpm --filter @workspace/txverify run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/txverify", "run", "build" ]
+publicDir = "artifacts/txverify/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20504"
+BASE_PATH = "/"
